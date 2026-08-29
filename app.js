@@ -9,7 +9,7 @@ async function checkConnection(main) {
   main.appendChild(status);
 
   const { data, error } = await supabase
-    .from("events")
+    .from("calendar_events")
     .select("*")
     .order("start_at", { ascending: true });
 

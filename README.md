@@ -16,7 +16,7 @@
 
 ## Supabase のセットアップ
 
-1. Supabase ダッシュボード → SQL Editor で `schema.sql` を実行し、`events` テーブルを作成する
+1. Supabase ダッシュボード → SQL Editor で `schema.sql` を実行し、`calendar_events` テーブルを作成する
 2. 画面を開くと、上部に「Supabase 接続成功 — 予定 N 件」と表示されれば接続完了
 
 接続情報（プロジェクトURL / anon キー）は `supabaseClient.js` に記載しています。
