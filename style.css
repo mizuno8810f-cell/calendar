@@ -40,3 +40,22 @@ body {
   flex: 1;
   padding: 1.5rem;
 }
+
+.status {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.status--ok {
+  border-color: #b7e0c0;
+  background: #edf9f0;
+  color: #1b6b34;
+}
+
+.status--error {
+  border-color: #f0c0c0;
+  background: #fdeeee;
+  color: #a12626;
+}
