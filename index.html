@@ -2,18 +2,36 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>カレンダー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ふたりのカレンダー</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app">
     <header class="app-header">
-      <h1>カレンダー</h1>
+      <h1 class="app-title">ふたりのカレンダー</h1>
+      <span id="conn" class="conn" title="接続を確認中"></span>
     </header>
-    <main id="main" class="app-main">
-      <!-- カレンダーはここに表示されます -->
-    </main>
+
+    <div class="toolbar">
+      <div class="month-label">
+        <span id="year" class="year"></span>
+        <span id="month" class="month"></span>
+      </div>
+      <div class="nav">
+        <button id="today" class="btn-today" type="button">今日</button>
+        <button id="prev" class="btn-nav" type="button" aria-label="前の月">‹</button>
+        <button id="next" class="btn-nav" type="button" aria-label="次の月">›</button>
+      </div>
+    </div>
+
+    <div id="weekdays" class="weekdays"></div>
+    <div id="grid" class="grid"></div>
+
+    <div class="legend">
+      <span class="legend-item"><i class="dot dot--me"></i>自分</span>
+      <span class="legend-item"><i class="dot dot--you"></i>相手</span>
+    </div>
   </div>
   <script type="module" src="app.js"></script>
 </body>
