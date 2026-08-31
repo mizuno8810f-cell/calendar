@@ -186,8 +186,19 @@ body {
 .cell--out .date { color: var(--fg-muted); font-weight: 500; }
 .cell .date.sun { color: var(--sun); }
 .cell .date.sat { color: var(--sat); }
+.cell .date.holiday { color: var(--sun); }
 .cell--out .date.sun,
-.cell--out .date.sat { color: var(--fg-muted); }
+.cell--out .date.sat,
+.cell--out .date.holiday { color: var(--fg-muted); }
+
+.holiday-name {
+  font-size: 0.58rem;
+  line-height: 1.15;
+  color: var(--sun);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .cell--today .date {
   background: var(--accent);

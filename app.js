@@ -11,6 +11,9 @@ viewDate.setDate(1);
 // スワイプ設定（"horizontal" = 左右 / "vertical" = 上下）
 let swipeAxis = loadSwipeAxis();
 
+// 日本の祝日 { "YYYY-MM-DD": "祝日名" }。まずはキャッシュ、その後ネットで更新
+let holidays = loadHolidaysCache();
+
 const el = {
   year: document.getElementById("year"),
   month: document.getElementById("month"),
@@ -33,6 +36,39 @@ function saveSwipeAxis(value) {
     localStorage.setItem("swipeAxis", value);
   } catch {
     /* localStorage が使えない環境では保存を諦める */
+  }
+}
+
+// ---- 祝日 ----
+function ymd(d) {
+  return (
+    `${d.getFullYear()}-` +
+    `${String(d.getMonth() + 1).padStart(2, "0")}-` +
+    `${String(d.getDate()).padStart(2, "0")}`
+  );
+}
+function loadHolidaysCache() {
+  try {
+    return JSON.parse(localStorage.getItem("holidays") || "{}");
+  } catch {
+    return {};
+  }
+}
+// 公開されている祝日データ（振替休日も含む）を取得してキャッシュ
+async function loadHolidays() {
+  try {
+    const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+    if (!res.ok) return;
+    const data = await res.json();
+    holidays = data;
+    try {
+      localStorage.setItem("holidays", JSON.stringify(data));
+    } catch {
+      /* 保存できなくても表示には使う */
+    }
+    renderMonth(); // 取得できたら再描画して赤を反映
+  } catch {
+    /* オフライン等はキャッシュのみで表示 */
   }
 }
 
@@ -83,14 +119,23 @@ function renderMonth() {
     const num = document.createElement("span");
     num.className = "date";
     const dow = date.getDay(); // 0=日 ... 6=土
-    if (dow === 0) num.classList.add("sun");
-    if (dow === 6) num.classList.add("sat");
+    const holidayName = holidays[ymd(date)];
+    if (holidayName) num.classList.add("holiday");
+    else if (dow === 0) num.classList.add("sun");
+    else if (dow === 6) num.classList.add("sat");
     num.textContent = date.getDate();
     cell.appendChild(num);
 
     // 予定を入れる場所（今は空。あとで自分/相手の予定を描画）
     const slots = document.createElement("div");
     slots.className = "slots";
+    // 祝日名（当月のみ表示）
+    if (holidayName && date.getMonth() === month) {
+      const tag = document.createElement("span");
+      tag.className = "holiday-name";
+      tag.textContent = holidayName;
+      slots.appendChild(tag);
+    }
     cell.appendChild(slots);
 
     el.grid.appendChild(cell);
@@ -195,4 +240,5 @@ document.getElementById("today").addEventListener("click", goToday);
 // ---- 起動 ----
 renderWeekdays();
 renderMonth();
+loadHolidays();
 checkConnection();
