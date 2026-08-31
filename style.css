@@ -61,6 +61,23 @@ body {
 .conn--ok { background: #2eb872; }
 .conn--error { background: var(--sun); }
 
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--fg);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.btn-icon:active { background: var(--bg-sub); }
+
 /* ツールバー */
 .toolbar {
   display: flex;
@@ -205,3 +222,82 @@ body {
 }
 .dot--me { background: var(--accent); }
 .dot--you { background: var(--partner); }
+
+/* 設定画面 */
+.settings {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.settings[hidden] { display: none; }
+
+.settings-panel {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.settings-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: calc(0.6rem + var(--safe-top)) 0.75rem 0.6rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.settings-head h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-section {
+  padding: 1.25rem 1rem 0.5rem;
+}
+.settings-section h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 0.35rem;
+}
+.settings-desc {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin-bottom: 0.75rem;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 0.25rem;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+.opt:last-child { border-bottom: 1px solid var(--border); }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt-label { flex: 1; font-size: 0.95rem; }
+
+.opt-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex: none;
+  position: relative;
+}
+.opt input:checked + .opt-label + .opt-check {
+  border-color: var(--accent);
+}
+.opt input:checked + .opt-label + .opt-check::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}

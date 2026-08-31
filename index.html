@@ -11,6 +11,7 @@
     <header class="app-header">
       <h1 class="app-title">ふたりのカレンダー</h1>
       <span id="conn" class="conn" title="接続を確認中"></span>
+      <button id="open-settings" class="btn-icon" type="button" aria-label="設定">⚙</button>
     </header>
 
     <div class="toolbar">
@@ -33,6 +34,32 @@
       <span class="legend-item"><i class="dot dot--you"></i>相手</span>
     </div>
   </div>
+
+  <!-- 設定画面 -->
+  <div id="settings" class="settings" hidden>
+    <div class="settings-panel">
+      <div class="settings-head">
+        <button id="close-settings" class="btn-icon" type="button" aria-label="閉じる">✕</button>
+        <h2>設定</h2>
+      </div>
+
+      <section class="settings-section">
+        <h3>月の移動</h3>
+        <p class="settings-desc">カレンダーをスワイプして月を切り替える向きを選べます。</p>
+        <label class="opt">
+          <input type="radio" name="swipeAxis" value="horizontal">
+          <span class="opt-label">左右スワイプで月を移動</span>
+          <span class="opt-check"></span>
+        </label>
+        <label class="opt">
+          <input type="radio" name="swipeAxis" value="vertical">
+          <span class="opt-label">上下スワイプで月を移動</span>
+          <span class="opt-check"></span>
+        </label>
+      </section>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
