@@ -30,6 +30,9 @@ let selectedDate = null;
 let penOwner = "hayato";
 let penCategory = "play";
 
+// 表示の絞り込み（人ごと）
+const filters = { hayato: true, shiori: true, both: true };
+
 // 表示メタ
 const OWNERS = { hayato: "はやと", shiori: "しおり", both: "二人" };
 const CATS = { play: "遊び", work: "仕事" };
@@ -135,9 +138,9 @@ function makeCell(date, outOfMonth) {
     slots.appendChild(tag);
   }
 
-  // 予定チップ（最大3件＋残りは +N）
-  const list = eventsByDate[ymd(date)];
-  if (list && list.length) {
+  // 予定チップ（最大3件＋残りは +N）※絞り込みを反映
+  const list = (eventsByDate[ymd(date)] || []).filter((ev) => filters[ev.owner]);
+  if (list.length) {
     list.slice(0, 3).forEach((ev) => {
       const chip = document.createElement("span");
       chip.className = "chip chip--" + normOwner(ev.owner);
@@ -502,7 +505,10 @@ function closeDay() {
 function renderDayList() {
   const listEl = document.getElementById("day-list");
   listEl.innerHTML = "";
-  const items = (selectedDate && eventsByDate[ymd(selectedDate)]) || [];
+  const items = (
+    (selectedDate && eventsByDate[ymd(selectedDate)]) ||
+    []
+  ).filter((ev) => filters[ev.owner]);
   if (!items.length) {
     const li = document.createElement("li");
     li.className = "day-empty";
@@ -573,6 +579,17 @@ catPop.querySelectorAll(".catp-btn").forEach((b) => {
 // 外側タップで閉じる
 document.addEventListener("click", () => {
   if (!catPop.hidden) closeCatPop();
+});
+
+// ---- 絞り込みバー ----
+document.querySelectorAll("#filter-bar .fb-btn").forEach((b) => {
+  b.addEventListener("click", () => {
+    const o = b.dataset.owner;
+    filters[o] = !filters[o];
+    b.classList.toggle("is-active", filters[o]);
+    render();
+    if (!el.daySheet.hidden) renderDayList();
+  });
 });
 
 // ---- 日別シートのフォーム ----
