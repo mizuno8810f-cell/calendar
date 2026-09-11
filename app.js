@@ -1,5 +1,5 @@
 // ふたりのカレンダー — 月表示の描画
-import { supabase } from "./supabaseClient.js";
+import { supabase } from "./supabaseClient.js?v=8";
 
 // 月曜始まり（土=index5, 日=index6）
 const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"];
