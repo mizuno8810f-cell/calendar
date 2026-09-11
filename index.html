@@ -28,11 +28,19 @@
 
     <div id="weekdays" class="weekdays"></div>
     <div id="grid" class="grid"></div>
+  </div>
 
-    <div class="legend">
-      <span class="legend-item"><i class="dot dot--me"></i>自分</span>
-      <span class="legend-item"><i class="dot dot--you"></i>相手</span>
-    </div>
+  <!-- 下部固定バー：誰の予定か -->
+  <nav id="owner-bar" class="owner-bar">
+    <button class="ob-btn ob-hayato" type="button" data-owner="hayato">はやと</button>
+    <button class="ob-btn ob-shiori" type="button" data-owner="shiori">しおり</button>
+    <button class="ob-btn ob-both" type="button" data-owner="both">二人</button>
+  </nav>
+
+  <!-- 種類選択ポップオーバー -->
+  <div id="cat-pop" class="cat-pop" hidden>
+    <button class="catp-btn" type="button" data-cat="play">遊び</button>
+    <button class="catp-btn" type="button" data-cat="work">仕事</button>
   </div>
 
   <!-- 日別シート（予定の確認・追加） -->
@@ -48,10 +56,15 @@
 
       <form id="add-form" class="add-form">
         <div class="owner-toggle">
-          <button type="button" class="owner-btn owner-btn--me is-active" data-owner="me">自分</button>
-          <button type="button" class="owner-btn owner-btn--you" data-owner="partner">相手</button>
+          <button type="button" class="own-btn ob-hayato" data-owner="hayato">はやと</button>
+          <button type="button" class="own-btn ob-shiori" data-owner="shiori">しおり</button>
+          <button type="button" class="own-btn ob-both" data-owner="both">二人</button>
         </div>
-        <input id="ev-title" class="ev-input" type="text" placeholder="予定（例：仕事、デート）" required>
+        <div class="cat-toggle">
+          <button type="button" class="cat-btn" data-cat="play">遊び</button>
+          <button type="button" class="cat-btn" data-cat="work">仕事</button>
+        </div>
+        <input id="ev-title" class="ev-input" type="text" placeholder="予定名（任意・空なら種類名）">
         <div class="add-row">
           <input id="ev-time" class="ev-input ev-time" type="time">
           <span class="add-hint">時刻なし＝終日</span>

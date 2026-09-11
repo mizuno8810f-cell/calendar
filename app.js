@@ -21,11 +21,23 @@ let holidays = loadHolidaysCache();
 // 連続スクロール用の状態
 const scrollState = { built: false, sections: [] };
 
-// 予定 { "YYYY-MM-DD": [ {id, owner, title, time, all_day} ] }
+// 予定 { "YYYY-MM-DD": [ {id, owner, category, title, time, all_day} ] }
 let eventsByDate = {};
-// 日別シートで開いている日付・追加フォームで選択中の owner
+// 日別シートで開いている日付
 let selectedDate = null;
-let formOwner = "me";
+
+// 「次に追加する予定」の人・種類（ペン）
+let penOwner = "hayato";
+let penCategory = "play";
+
+// 表示メタ
+const OWNERS = { hayato: "はやと", shiori: "しおり", both: "二人" };
+const CATS = { play: "遊び", work: "仕事" };
+function normOwner(o) {
+  if (o === "partner") return "shiori";
+  if (o === "me") return "hayato";
+  return o in OWNERS ? o : "hayato";
+}
 
 const el = {
   year: document.getElementById("year"),
@@ -128,8 +140,16 @@ function makeCell(date, outOfMonth) {
   if (list && list.length) {
     list.slice(0, 3).forEach((ev) => {
       const chip = document.createElement("span");
-      chip.className = "chip " + (ev.owner === "partner" ? "chip--you" : "chip--me");
-      chip.textContent = (ev.time ? ev.time + " " : "") + ev.title;
+      chip.className = "chip chip--" + normOwner(ev.owner);
+      if (ev.category) {
+        const badge = document.createElement("i");
+        badge.className = "chip-cat";
+        badge.textContent = ev.category === "work" ? "仕" : "遊";
+        chip.appendChild(badge);
+      }
+      chip.appendChild(
+        document.createTextNode((ev.time ? ev.time + " " : "") + ev.title)
+      );
       slots.appendChild(chip);
     });
     if (list.length > 3) {
@@ -393,7 +413,8 @@ async function fetchEvents() {
         ).padStart(2, "0")}`;
     (eventsByDate[key] ||= []).push({
       id: ev.id,
-      owner: ev.owner || "me",
+      owner: normOwner(ev.owner),
+      category: ev.category || null,
       title: ev.title,
       time,
       all_day: ev.all_day,
@@ -403,7 +424,7 @@ async function fetchEvents() {
   if (!el.daySheet.hidden) renderDayList();
 }
 
-async function addEvent(dateObj, owner, title, time) {
+async function addEvent(dateObj, owner, category, title, time) {
   let start_at, all_day;
   if (time) {
     const [hh, mm] = time.split(":").map(Number);
@@ -425,7 +446,7 @@ async function addEvent(dateObj, owner, title, time) {
   }
   const { error } = await supabase
     .from("calendar_events")
-    .insert({ owner, title, start_at, all_day });
+    .insert({ owner, category, title, start_at, all_day });
   if (error) {
     alert("保存に失敗しました: " + error.message);
     return false;
@@ -446,6 +467,20 @@ async function deleteEvent(id) {
   await fetchEvents();
 }
 
+// ---- ペン（誰の予定・種類）----
+function setPenOwner(owner) {
+  penOwner = owner;
+  document.querySelectorAll(".own-btn, .ob-btn").forEach((b) => {
+    b.classList.toggle("is-active", b.dataset.owner === owner);
+  });
+}
+function setPenCategory(cat) {
+  penCategory = cat;
+  document.querySelectorAll(".cat-btn").forEach((b) => {
+    b.classList.toggle("is-active", b.dataset.cat === cat);
+  });
+}
+
 // ---- 日別シート ----
 function openDay(date) {
   selectedDate = date;
@@ -454,10 +489,11 @@ function openDay(date) {
   }）`;
   document.getElementById("day-title").textContent = heading;
   renderDayList();
-  // フォームを初期化
+  // フォームは現在のペンを反映
   document.getElementById("ev-title").value = "";
   document.getElementById("ev-time").value = "";
-  setFormOwner("me");
+  setPenOwner(penOwner);
+  setPenCategory(penCategory);
   el.daySheet.hidden = false;
 }
 function closeDay() {
@@ -479,7 +515,7 @@ function renderDayList() {
     li.className = "day-item";
 
     const dot = document.createElement("i");
-    dot.className = "dot " + (ev.owner === "partner" ? "dot--you" : "dot--me");
+    dot.className = "dot dot--" + ev.owner;
     li.appendChild(dot);
 
     const time = document.createElement("span");
@@ -489,7 +525,8 @@ function renderDayList() {
 
     const title = document.createElement("span");
     title.className = "di-title";
-    title.textContent = ev.title;
+    const catLabel = ev.category ? `［${CATS[ev.category]}］` : "";
+    title.textContent = `${OWNERS[ev.owner]} ${catLabel}${ev.title}`;
     li.appendChild(title);
 
     const del = document.createElement("button");
@@ -504,26 +541,57 @@ function renderDayList() {
   });
 }
 
-function setFormOwner(owner) {
-  formOwner = owner;
-  document.querySelectorAll(".owner-btn").forEach((b) => {
-    b.classList.toggle("is-active", b.dataset.owner === owner);
-  });
+// ---- 下部バー＋種類ポップオーバー ----
+const catPop = document.getElementById("cat-pop");
+let popOwner = null;
+
+function openCatPop(btn, owner) {
+  popOwner = owner;
+  const rect = btn.getBoundingClientRect();
+  catPop.style.left = `${rect.left + rect.width / 2}px`;
+  catPop.hidden = false;
+}
+function closeCatPop() {
+  catPop.hidden = true;
+  popOwner = null;
 }
 
-// 日別シートのイベント
+document.querySelectorAll("#owner-bar .ob-btn").forEach((b) => {
+  b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openCatPop(b, b.dataset.owner);
+  });
+});
+catPop.querySelectorAll(".catp-btn").forEach((b) => {
+  b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (popOwner) setPenOwner(popOwner);
+    setPenCategory(b.dataset.cat);
+    closeCatPop();
+  });
+});
+// 外側タップで閉じる
+document.addEventListener("click", () => {
+  if (!catPop.hidden) closeCatPop();
+});
+
+// ---- 日別シートのフォーム ----
 el.daySheet.querySelectorAll("[data-close]").forEach((n) => {
   n.addEventListener("click", closeDay);
 });
-document.querySelectorAll(".owner-btn").forEach((b) => {
-  b.addEventListener("click", () => setFormOwner(b.dataset.owner));
+document.querySelectorAll("#add-form .own-btn").forEach((b) => {
+  b.addEventListener("click", () => setPenOwner(b.dataset.owner));
+});
+document.querySelectorAll("#add-form .cat-btn").forEach((b) => {
+  b.addEventListener("click", () => setPenCategory(b.dataset.cat));
 });
 document.getElementById("add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const title = document.getElementById("ev-title").value.trim();
+  if (!selectedDate) return;
+  const title =
+    document.getElementById("ev-title").value.trim() || CATS[penCategory];
   const time = document.getElementById("ev-time").value;
-  if (!title || !selectedDate) return;
-  const ok = await addEvent(selectedDate, formOwner, title, time);
+  const ok = await addEvent(selectedDate, penOwner, penCategory, title, time);
   if (ok) {
     document.getElementById("ev-title").value = "";
     document.getElementById("ev-time").value = "";
@@ -537,6 +605,8 @@ document.getElementById("today").addEventListener("click", goToday);
 
 // ---- 起動 ----
 renderWeekdays();
+setPenOwner(penOwner);
+setPenCategory(penCategory);
 render();
 loadHolidays();
 fetchEvents();

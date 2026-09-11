@@ -4,8 +4,10 @@
   --fg: #1a1a1a;
   --fg-muted: #9aa0a6;
   --border: #e6e6ea;
-  --accent: #3b6ef5;   /* 自分 / 今日 */
-  --partner: #ec4899;  /* 相手 */
+  --accent: #3b6ef5;   /* 今日 */
+  --hayato: #3b6ef5;   /* はやと */
+  --shiori: #ec4899;   /* しおり */
+  --both:   #8b5cf6;   /* 二人 */
   --sun: #e5484d;
   --sat: #3b6ef5;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -32,6 +34,8 @@ body {
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  /* 下部固定バーぶんの余白 */
+  padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ヘッダー */
@@ -256,8 +260,17 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.chip--me { background: var(--accent); }
-.chip--you { background: var(--partner); }
+.chip--hayato { background: var(--hayato); }
+.chip--shiori { background: var(--shiori); }
+.chip--both { background: var(--both); }
+.chip-cat {
+  font-style: normal;
+  font-size: 0.55rem;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  padding: 0 2px;
+  margin-right: 2px;
+}
 .chip-more {
   font-size: 0.58rem;
   color: var(--fg-muted);
@@ -283,8 +296,66 @@ body {
   border-radius: 50%;
   display: inline-block;
 }
-.dot--me { background: var(--accent); }
-.dot--you { background: var(--partner); }
+.dot--hayato { background: var(--hayato); }
+.dot--shiori { background: var(--shiori); }
+.dot--both { background: var(--both); }
+
+/* 下部固定バー：誰の予定か */
+.owner-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  gap: 0.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.ob-btn {
+  flex: 1;
+  padding: 0.6rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+.ob-btn.ob-hayato.is-active { color: #fff; background: var(--hayato); border-color: var(--hayato); }
+.ob-btn.ob-shiori.is-active { color: #fff; background: var(--shiori); border-color: var(--shiori); }
+.ob-btn.ob-both.is-active   { color: #fff; background: var(--both);   border-color: var(--both); }
+
+/* 種類選択ポップオーバー */
+.cat-pop {
+  position: fixed;
+  z-index: 40;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+.cat-pop[hidden] { display: none; }
+.catp-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-sub);
+  color: var(--fg);
+  cursor: pointer;
+}
+.catp-btn:active { background: var(--border); }
 
 /* 日別シート */
 .sheet {
@@ -365,11 +436,13 @@ body {
   border-top: 1px solid var(--border);
   padding-top: 0.9rem;
 }
-.owner-toggle {
+.owner-toggle,
+.cat-toggle {
   display: flex;
   gap: 0.5rem;
 }
-.owner-btn {
+.own-btn,
+.cat-btn {
   flex: 1;
   padding: 0.5rem;
   font-size: 0.9rem;
@@ -380,15 +453,14 @@ body {
   border-radius: 10px;
   cursor: pointer;
 }
-.owner-btn--me.is-active {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: #eef3ff;
-}
-.owner-btn--you.is-active {
-  color: var(--partner);
-  border-color: var(--partner);
-  background: #fdeef6;
+/* オーナー別の選択中スタイル */
+.own-btn.ob-hayato.is-active { color: var(--hayato); border-color: var(--hayato); background: #eef3ff; }
+.own-btn.ob-shiori.is-active { color: var(--shiori); border-color: var(--shiori); background: #fdeef6; }
+.own-btn.ob-both.is-active   { color: var(--both);   border-color: var(--both);   background: #f2ecfe; }
+.cat-btn.is-active {
+  color: var(--fg);
+  border-color: var(--fg-muted);
+  background: var(--bg);
 }
 .ev-input {
   width: 100%;
