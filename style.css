@@ -357,33 +357,6 @@ body {
 .ob-btn.ob-shiori.is-active { color: #fff; background: var(--shiori); border-color: var(--shiori); }
 .ob-btn.ob-both.is-active   { color: #fff; background: var(--both);   border-color: var(--both); }
 
-/* 種類選択ポップオーバー */
-.cat-pop {
-  position: fixed;
-  z-index: 40;
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.4rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-.cat-pop[hidden] { display: none; }
-.catp-btn {
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--fg);
-  cursor: pointer;
-}
-.catp-btn:active { background: var(--border); }
-
 /* 日別シート */
 .sheet {
   position: fixed;

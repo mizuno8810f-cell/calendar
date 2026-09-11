@@ -50,6 +50,7 @@ const el = {
   conn: document.getElementById("conn"),
   settings: document.getElementById("settings"),
   daySheet: document.getElementById("day-sheet"),
+  addSheet: document.getElementById("add-sheet"),
 };
 
 // ---- 設定の保存/読み込み ----
@@ -470,10 +471,10 @@ async function deleteEvent(id) {
   await fetchEvents();
 }
 
-// ---- ペン（誰の予定・種類）----
+// ---- 登録フォームの選択状態（人・種類）----
 function setPenOwner(owner) {
   penOwner = owner;
-  document.querySelectorAll(".own-btn, .ob-btn").forEach((b) => {
+  document.querySelectorAll(".own-btn").forEach((b) => {
     b.classList.toggle("is-active", b.dataset.owner === owner);
   });
 }
@@ -547,38 +548,41 @@ function renderDayList() {
   });
 }
 
-// ---- 下部バー＋種類ポップオーバー ----
-const catPop = document.getElementById("cat-pop");
-let popOwner = null;
-
-function openCatPop(btn, owner) {
-  popOwner = owner;
-  const rect = btn.getBoundingClientRect();
-  catPop.style.left = `${rect.left + rect.width / 2}px`;
-  catPop.hidden = false;
+// ---- 下部バー：予定登録の小画面を開く ----
+function openAdd() {
+  const base = selectedDate || new Date();
+  document.getElementById("q-date").value = ymd(base);
+  document.getElementById("q-title").value = "";
+  document.getElementById("q-time").value = "";
+  setPenOwner(penOwner);
+  setPenCategory(penCategory);
+  el.addSheet.hidden = false;
 }
-function closeCatPop() {
-  catPop.hidden = true;
-  popOwner = null;
+function closeAdd() {
+  el.addSheet.hidden = true;
 }
 
 document.querySelectorAll("#owner-bar .ob-btn").forEach((b) => {
-  b.addEventListener("click", (e) => {
-    e.stopPropagation();
-    openCatPop(b, b.dataset.owner);
+  b.addEventListener("click", () => {
+    setPenOwner(b.dataset.owner);
+    openAdd();
   });
 });
-catPop.querySelectorAll(".catp-btn").forEach((b) => {
-  b.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (popOwner) setPenOwner(popOwner);
-    setPenCategory(b.dataset.cat);
-    closeCatPop();
-  });
+
+el.addSheet.querySelectorAll("[data-add-close]").forEach((n) => {
+  n.addEventListener("click", closeAdd);
 });
-// 外側タップで閉じる
-document.addEventListener("click", () => {
-  if (!catPop.hidden) closeCatPop();
+document.getElementById("quick-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const dv = document.getElementById("q-date").value;
+  if (!dv) return;
+  const [y, m, d] = dv.split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const title =
+    document.getElementById("q-title").value.trim() || CATS[penCategory];
+  const time = document.getElementById("q-time").value;
+  const ok = await addEvent(dateObj, penOwner, penCategory, title, time);
+  if (ok) closeAdd();
 });
 
 // ---- 絞り込みバー ----
@@ -596,10 +600,10 @@ document.querySelectorAll("#filter-bar .fb-btn").forEach((b) => {
 el.daySheet.querySelectorAll("[data-close]").forEach((n) => {
   n.addEventListener("click", closeDay);
 });
-document.querySelectorAll("#add-form .own-btn").forEach((b) => {
+document.querySelectorAll(".own-btn").forEach((b) => {
   b.addEventListener("click", () => setPenOwner(b.dataset.owner));
 });
-document.querySelectorAll("#add-form .cat-btn").forEach((b) => {
+document.querySelectorAll(".cat-btn").forEach((b) => {
   b.addEventListener("click", () => setPenCategory(b.dataset.cat));
 });
 document.getElementById("add-form").addEventListener("submit", async (e) => {
