@@ -21,6 +21,12 @@ let holidays = loadHolidaysCache();
 // 連続スクロール用の状態
 const scrollState = { built: false, sections: [] };
 
+// 予定 { "YYYY-MM-DD": [ {id, owner, title, time, all_day} ] }
+let eventsByDate = {};
+// 日別シートで開いている日付・追加フォームで選択中の owner
+let selectedDate = null;
+let formOwner = "me";
+
 const el = {
   year: document.getElementById("year"),
   month: document.getElementById("month"),
@@ -28,6 +34,7 @@ const el = {
   grid: document.getElementById("grid"),
   conn: document.getElementById("conn"),
   settings: document.getElementById("settings"),
+  daySheet: document.getElementById("day-sheet"),
 };
 
 // ---- 設定の保存/読み込み ----
@@ -115,7 +122,28 @@ function makeCell(date, outOfMonth) {
     tag.textContent = holidayName;
     slots.appendChild(tag);
   }
+
+  // 予定チップ（最大3件＋残りは +N）
+  const list = eventsByDate[ymd(date)];
+  if (list && list.length) {
+    list.slice(0, 3).forEach((ev) => {
+      const chip = document.createElement("span");
+      chip.className = "chip " + (ev.owner === "partner" ? "chip--you" : "chip--me");
+      chip.textContent = (ev.time ? ev.time + " " : "") + ev.title;
+      slots.appendChild(chip);
+    });
+    if (list.length > 3) {
+      const more = document.createElement("span");
+      more.className = "chip-more";
+      more.textContent = `+${list.length - 3}`;
+      slots.appendChild(more);
+    }
+  }
+
   cell.appendChild(slots);
+
+  const dayDate = new Date(date);
+  cell.addEventListener("click", () => openDay(dayDate));
   return cell;
 }
 function makeBlank() {
@@ -335,20 +363,172 @@ document.querySelectorAll('input[name="swipeAxis"]').forEach((radio) => {
   });
 });
 
-// ---- Supabase 接続確認（ヘッダーの点で表示）----
-async function checkConnection() {
-  const { error } = await supabase
+// ---- 予定（Supabase）----
+const JP_WEEK = ["日", "月", "火", "水", "木", "金", "土"];
+
+async function fetchEvents() {
+  const { data, error } = await supabase
     .from("calendar_events")
-    .select("id", { head: true, count: "exact" });
+    .select("*")
+    .order("start_at", { ascending: true });
+
   if (error) {
     el.conn.classList.add("conn--error");
     el.conn.title = `接続エラー: ${error.message}`;
     console.error("Supabase error:", error);
-  } else {
-    el.conn.classList.add("conn--ok");
-    el.conn.title = "Supabase に接続済み";
+    return;
   }
+  el.conn.classList.remove("conn--error");
+  el.conn.classList.add("conn--ok");
+  el.conn.title = "Supabase に接続済み";
+
+  eventsByDate = {};
+  for (const ev of data || []) {
+    const d = new Date(ev.start_at);
+    const key = ymd(d);
+    const time = ev.all_day
+      ? ""
+      : `${String(d.getHours()).padStart(2, "0")}:${String(
+          d.getMinutes()
+        ).padStart(2, "0")}`;
+    (eventsByDate[key] ||= []).push({
+      id: ev.id,
+      owner: ev.owner || "me",
+      title: ev.title,
+      time,
+      all_day: ev.all_day,
+    });
+  }
+  render();
+  if (!el.daySheet.hidden) renderDayList();
 }
+
+async function addEvent(dateObj, owner, title, time) {
+  let start_at, all_day;
+  if (time) {
+    const [hh, mm] = time.split(":").map(Number);
+    start_at = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate(),
+      hh,
+      mm
+    ).toISOString();
+    all_day = false;
+  } else {
+    start_at = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate()
+    ).toISOString();
+    all_day = true;
+  }
+  const { error } = await supabase
+    .from("calendar_events")
+    .insert({ owner, title, start_at, all_day });
+  if (error) {
+    alert("保存に失敗しました: " + error.message);
+    return false;
+  }
+  await fetchEvents();
+  return true;
+}
+
+async function deleteEvent(id) {
+  const { error } = await supabase
+    .from("calendar_events")
+    .delete()
+    .eq("id", id);
+  if (error) {
+    alert("削除に失敗しました: " + error.message);
+    return;
+  }
+  await fetchEvents();
+}
+
+// ---- 日別シート ----
+function openDay(date) {
+  selectedDate = date;
+  const heading = `${date.getMonth() + 1}月${date.getDate()}日（${
+    JP_WEEK[date.getDay()]
+  }）`;
+  document.getElementById("day-title").textContent = heading;
+  renderDayList();
+  // フォームを初期化
+  document.getElementById("ev-title").value = "";
+  document.getElementById("ev-time").value = "";
+  setFormOwner("me");
+  el.daySheet.hidden = false;
+}
+function closeDay() {
+  el.daySheet.hidden = true;
+}
+function renderDayList() {
+  const listEl = document.getElementById("day-list");
+  listEl.innerHTML = "";
+  const items = (selectedDate && eventsByDate[ymd(selectedDate)]) || [];
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.className = "day-empty";
+    li.textContent = "予定はありません";
+    listEl.appendChild(li);
+    return;
+  }
+  items.forEach((ev) => {
+    const li = document.createElement("li");
+    li.className = "day-item";
+
+    const dot = document.createElement("i");
+    dot.className = "dot " + (ev.owner === "partner" ? "dot--you" : "dot--me");
+    li.appendChild(dot);
+
+    const time = document.createElement("span");
+    time.className = "di-time";
+    time.textContent = ev.time || "終日";
+    li.appendChild(time);
+
+    const title = document.createElement("span");
+    title.className = "di-title";
+    title.textContent = ev.title;
+    li.appendChild(title);
+
+    const del = document.createElement("button");
+    del.className = "di-del";
+    del.type = "button";
+    del.textContent = "✕";
+    del.setAttribute("aria-label", "削除");
+    del.addEventListener("click", () => deleteEvent(ev.id));
+    li.appendChild(del);
+
+    listEl.appendChild(li);
+  });
+}
+
+function setFormOwner(owner) {
+  formOwner = owner;
+  document.querySelectorAll(".owner-btn").forEach((b) => {
+    b.classList.toggle("is-active", b.dataset.owner === owner);
+  });
+}
+
+// 日別シートのイベント
+el.daySheet.querySelectorAll("[data-close]").forEach((n) => {
+  n.addEventListener("click", closeDay);
+});
+document.querySelectorAll(".owner-btn").forEach((b) => {
+  b.addEventListener("click", () => setFormOwner(b.dataset.owner));
+});
+document.getElementById("add-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = document.getElementById("ev-title").value.trim();
+  const time = document.getElementById("ev-time").value;
+  if (!title || !selectedDate) return;
+  const ok = await addEvent(selectedDate, formOwner, title, time);
+  if (ok) {
+    document.getElementById("ev-title").value = "";
+    document.getElementById("ev-time").value = "";
+  }
+});
 
 // ---- ボタン ----
 document.getElementById("prev").addEventListener("click", () => moveMonth(-1));
@@ -359,4 +539,4 @@ document.getElementById("today").addEventListener("click", goToday);
 renderWeekdays();
 render();
 loadHolidays();
-checkConnection();
+fetchEvents();

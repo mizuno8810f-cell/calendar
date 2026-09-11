@@ -35,6 +35,32 @@
     </div>
   </div>
 
+  <!-- 日別シート（予定の確認・追加） -->
+  <div id="day-sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel">
+      <div class="sheet-head">
+        <h2 id="day-title"></h2>
+        <button class="btn-icon" type="button" data-close aria-label="閉じる">✕</button>
+      </div>
+
+      <ul id="day-list" class="day-list"></ul>
+
+      <form id="add-form" class="add-form">
+        <div class="owner-toggle">
+          <button type="button" class="owner-btn owner-btn--me is-active" data-owner="me">自分</button>
+          <button type="button" class="owner-btn owner-btn--you" data-owner="partner">相手</button>
+        </div>
+        <input id="ev-title" class="ev-input" type="text" placeholder="予定（例：仕事、デート）" required>
+        <div class="add-row">
+          <input id="ev-time" class="ev-input ev-time" type="time">
+          <span class="add-hint">時刻なし＝終日</span>
+          <button type="submit" class="btn-add">追加</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 設定画面 -->
   <div id="settings" class="settings" hidden>
     <div class="settings-panel">

@@ -6,6 +6,7 @@
 
 create table if not exists public.calendar_events (
   id          uuid primary key default gen_random_uuid(),
+  owner       text not null default 'me',   -- 'me'（自分）or 'partner'（相手）
   title       text not null,
   start_at    timestamptz not null,
   end_at      timestamptz,
@@ -13,6 +14,10 @@ create table if not exists public.calendar_events (
   description text,
   created_at  timestamptz not null default now()
 );
+
+-- すでにテーブルを作成済みの場合は、この1行だけ実行して owner 列を追加してください:
+alter table public.calendar_events
+  add column if not exists owner text not null default 'me';
 
 -- Row Level Security を有効化
 alter table public.calendar_events enable row level security;
